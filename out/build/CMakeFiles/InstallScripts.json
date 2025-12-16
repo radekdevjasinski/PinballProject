@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/radek/source/repos/Pinball/out/build/cmake_install.cmake",
+		"C:/Users/radek/source/repos/Pinball/out/build/Pinball/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

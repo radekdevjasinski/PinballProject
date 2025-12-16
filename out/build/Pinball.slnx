@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Solution>
+	<Configurations>
+		<BuildType Name="Debug"/>
+		<BuildType Name="Release"/>
+		<BuildType Name="MinSizeRel"/>
+		<BuildType Name="RelWithDebInfo"/>
+		<Platform Name="x64"/>
+	</Configurations>
+	<Project Path="ALL_BUILD.vcxproj" Id="217d3b8e-3577-3415-b2a3-b77fbe38e1c1">
+		<BuildDependency Project="Pinball/Pinball.vcxproj"/>
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="Pinball/Pinball.vcxproj" Id="40d0a0bd-4838-3d6a-91d8-31d0566c00b1">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="ZERO_CHECK.vcxproj" Id="1490085c-d630-3486-83d1-fa7e83df38bf"/>
+</Solution>
