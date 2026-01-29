@@ -9,13 +9,22 @@
 ModelManager::ModelManager() : sceneScale(1.0f) {}
 
 void ModelManager::processNode(aiNode* node, const aiScene* scene) {
-    // przetworz wszystkie siatki w aktualnym wezle
-    for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(processMesh(mesh, scene));
+    std::string nodeName = node->mName.C_Str();
+
+    std::vector<MeshEntry>* targetMeshList = &staticMeshes;
+
+    if (nodeName.find("Flipper.L") != std::string::npos) {
+        targetMeshList = &flipperLMeshes;
+    }
+    else if (nodeName.find("Flipper.R") != std::string::npos) {
+        targetMeshList = &flipperRMeshes;
     }
 
-    // rekurencyjnie przetwórz dzieci wêz³a
+    for (unsigned int i = 0; i < node->mNumMeshes; i++) {
+        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        targetMeshList->push_back(processMesh(mesh, scene));
+    }
+
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
         processNode(node->mChildren[i], scene);
     }
@@ -67,30 +76,34 @@ bool ModelManager::loadModel(const std::string& path) {
     for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
         aiMaterial* material = scene->mMaterials[i];
         aiColor3D color(0.8f, 0.8f, 0.8f);
+        float opacity = 1.0f;
 
-        if (material->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS) {
-            materialColors.push_back({ color.r, color.g, color.b });
-        }
-        else {
-            materialColors.push_back({ 0.8f, 0.8f, 0.8f });
-        }
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+        material->Get(AI_MATKEY_OPACITY, opacity);
+
+        materialColors.push_back({ color.r, color.g, color.b, opacity });
     }
-    meshes.clear();
+    staticMeshes.clear();
+    flipperLMeshes.clear();
+    flipperRMeshes.clear();
     processNode(scene->mRootNode, scene);
 
     return true;
 }
 
-void ModelManager::draw() {
-    for (const auto& mesh : meshes) {
+void ModelManager::drawMeshList(const std::vector<MeshEntry>& meshList) {
+    for (const auto& mesh : meshList) {
         if (mesh.materialIndex < materialColors.size()) {
-            const auto& color = materialColors[mesh.materialIndex];
-            glColor3f(color.r, color.g, color.b);
+            const auto& mat = materialColors[mesh.materialIndex];
+            glColor4f(mat.r, mat.g, mat.b, mat.a);
         }
+        else {
+            glColor4f(0.8f, 0.8f, 0.8f, 1.0f);
+        }
+
         glBegin(GL_TRIANGLES);
         for (unsigned int i = 0; i < mesh.indices.size(); i++) {
             unsigned int index = mesh.indices[i];
-
             if (!mesh.normals.empty()) {
                 glNormal3f(mesh.normals[index].x, mesh.normals[index].y, mesh.normals[index].z);
             }
@@ -100,25 +113,48 @@ void ModelManager::draw() {
     }
 }
 
-void ModelManager::getGeometryData(std::vector<float>& outVertices, std::vector<uint32_t>& outIndices) {
+void ModelManager::drawFlipperL() {
+    drawMeshList(flipperLMeshes);
+}
+
+void ModelManager::drawFlipperR() {
+    drawMeshList(flipperRMeshes);
+}
+
+void ModelManager::drawTable() {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    drawMeshList(staticMeshes);
+    glDisable(GL_BLEND);
+
+}
+
+void ModelManager::extractGeometry(const std::vector<MeshEntry>& meshes, std::vector<float>& outVertices, std::vector<uint32_t>& outIndices) {
     outVertices.clear();
     outIndices.clear();
     uint32_t baseVertex = 0;
 
     for (const auto& mesh : meshes) {
-        // wierzcho³ki
         for (const auto& vertex : mesh.vertices) {
             outVertices.push_back(vertex.x);
             outVertices.push_back(vertex.y);
             outVertices.push_back(vertex.z);
         }
-
-        //indeksy, uwzglêdniaj¹c offset z poprzednich siatek
         for (unsigned int index : mesh.indices) {
             outIndices.push_back(baseVertex + index);
         }
-
-        // aktualizuj offset dla nastêpnej siatki
         baseVertex += mesh.vertices.size();
     }
+}
+
+void ModelManager::getGeometryData(std::vector<float>& outVertices, std::vector<uint32_t>& outIndices) {
+    extractGeometry(staticMeshes, outVertices, outIndices);
+}
+
+void ModelManager::getFlipperLGeometry(std::vector<float>& outVertices, std::vector<uint32_t>& outIndices) {
+    extractGeometry(flipperLMeshes, outVertices, outIndices);
+}
+
+void ModelManager::getFlipperRGeometry(std::vector<float>& outVertices, std::vector<uint32_t>& outIndices) {
+    extractGeometry(flipperRMeshes, outVertices, outIndices);
 }

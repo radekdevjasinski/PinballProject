@@ -8,7 +8,8 @@ using namespace physx;
 enum class ObjectType {
     MODEL,  
     SPHERE, 
-    PLANE  
+    PLANE,
+    FLIPPER
 };
 
 class GameObject {
@@ -53,7 +54,7 @@ public:
         glScalef(scale.x, scale.y, scale.z);
 
         if (type == ObjectType::MODEL && model) {
-            model->draw();
+            //model->drawTable();
         }
         else if (type == ObjectType::SPHERE) {
             glDisable(GL_COLOR_MATERIAL);

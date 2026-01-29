@@ -14,7 +14,7 @@ public:
     float pitch = -60.0f;   
 
     float centerX = 0.0f;
-    float centerY = 0.0f;
+    float centerY = 10.0f;
     float centerZ = 0.0f;
 
 
